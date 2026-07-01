@@ -75,6 +75,80 @@
     </div>
 </section>
 
+<!-- "How it works" video modal -->
+<div id="how-it-works-modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="how-it-works-title">
+    <div class="modal-overlay" data-modal-close></div>
+    <div class="modal-dialog" role="document">
+        <button type="button" class="modal-close" data-modal-close aria-label="Close video">
+            <span aria-hidden="true">&times;</span>
+        </button>
+        <h2 id="how-it-works-title" class="sr-only">How Spendly works</h2>
+        <div class="modal-video-wrapper">
+            <iframe
+                id="how-it-works-video"
+                class="modal-video"
+                src=""
+                title="How Spendly works"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+                referrerpolicy="strict-origin-when-cross-origin"></iframe>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Wire up the "See how it works" button to open the modal.
+    // The video URL is kept in a data attribute so it can be swapped
+    // out later without touching the script.
+    (function () {
+        const trigger = document.querySelector('.btn-primary-ghost');
+        const modal = document.getElementById('how-it-works-modal');
+        const video = document.getElementById('how-it-works-video');
+        if (!trigger || !modal || !video) return;
+
+        const placeholderUrl = 'https://www.youtube.com/embed/dQw4w9WgXcQ';
+        // The iframe src starts empty so the video only loads when the modal is opened.
+
+        function openModal() {
+            if (!video.src) {
+                video.src = placeholderUrl + '?autoplay=1&rel=0';
+            } else {
+                // Resume playback if it was previously loaded
+                video.src = video.src.replace('&autoplay=0', '') + '&autoplay=1';
+            }
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            // Strip the autoplay param and remove the src entirely so the
+            // video stops playing immediately (and doesn't keep playing in
+            // the background).
+            video.src = '';
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }
+
+        trigger.addEventListener('click', function (e) {
+            e.preventDefault();
+            openModal();
+        });
+
+        modal.querySelectorAll('[data-modal-close]').forEach(function (el) {
+            el.addEventListener('click', closeModal);
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && modal.classList.contains('is-open')) {
+                closeModal();
+            }
+        });
+    })();
+</script>
+
 <section class="features">
     <div class="features-inner">
         <div class="feature-card">
