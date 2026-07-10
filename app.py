@@ -1,6 +1,14 @@
 from flask import Flask, render_template
 
+from database.db import init_db, seed_db
+
 app = Flask(__name__)
+
+# Initialize and seed the database before any route can be hit.
+# Module-level so it runs for `python app.py`, `flask run`, and WSGI runners.
+with app.app_context():
+    init_db()
+    seed_db()
 
 
 # ------------------------------------------------------------------ #
