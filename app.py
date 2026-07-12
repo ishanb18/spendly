@@ -2,7 +2,7 @@ import re
 import sqlite3
 
 from flask import Flask, flash, redirect, render_template, request, session, url_for
-from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from database.db import get_db, init_db, seed_db
 
@@ -31,6 +31,10 @@ def landing():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    # If user is already logged in, redirect to landing page.
+    if session.get("user_id"):
+        return redirect(url_for("landing"))
+
     # GET: render the form, restoring any one-shot prefill from a prior POST.
     if request.method == "GET":
         prefill = session.pop("register_form", None) or {}
@@ -85,9 +89,55 @@ def register():
     return redirect(url_for("landing"))
 
 
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    return render_template("login.html")
+    # If user is already logged in, redirect to landing page.
+    if session.get("user_id"):
+        return redirect(url_for("landing"))
+
+    # GET: render the form, restoring any one‑shot prefill from a prior POST.
+    if request.method == "GET":
+        prefill = session.pop("login_form", None) or {}
+        return render_template(
+            "login.html",
+            email=prefill.get("email", ""),
+        )
+
+    # POST: look up user, verify password, set session.
+    email = (request.form.get("email") or "").strip().lower()
+    password = request.form.get("password") or ""
+
+    def fail(message):
+        # Preserve the user's typed email across the redirect; never prefill password.
+        session["login_form"] = {"email": email}
+        flash(message, "error")
+        return redirect(url_for("login"))
+
+    if not email or not password:
+        return fail("Email and password are required.")
+
+    conn = get_db()
+    try:
+        row = conn.execute(
+            "SELECT id, name, password_hash FROM users WHERE email = ?",
+            (email,),
+        ).fetchone()
+    except sqlite3.DatabaseError:
+        conn.close()
+        return fail("Something went wrong. Please try again.")
+    else:
+        conn.close()
+
+    # Constant‑time check – always run check_password_hash, even when the user is missing.
+    password_hash = row["password_hash"] if row else generate_password_hash("")
+    if row is None or not check_password_hash(password_hash, password):
+        return fail("Invalid email or password.")
+
+    # Log the user in.
+    session.clear()
+    session["user_id"] = row["id"]
+    session["user_name"] = row["name"]
+    return redirect(url_for("landing"))
 
 
 @app.route("/terms")
@@ -104,9 +154,10 @@ def privacy():
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
 
-@app.route("/logout")
+@app.route("/logout", methods=["POST"])
 def logout():
-    return "Logout — coming in Step 3"
+    session.clear()
+    return redirect(url_for("landing"))
 
 
 @app.route("/profile")
