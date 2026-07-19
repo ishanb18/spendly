@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Profile — Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="profile-section">
+    <div class="profile-container">
+
+        <div class="profile-card">
+            <div class="profile-avatar">{{ user["name"]|initials }}</div>
+            <div class="profile-identity">
+                <h1 class="profile-name">{{ user["name"] }}</h1>
+                <p class="profile-email">{{ user["email"] }}</p>
+                <p class="profile-member-since">Member since {{ member_since }}</p>
+            </div>
+        </div>
+
+        <div class="profile-stats">
+            <div class="profile-stat-card">
+                <span class="profile-stat-label">Total Spent</span>
+                <span class="profile-stat-value">{{ summary.total|rupees }}</span>
+            </div>
+            <div class="profile-stat-card">
+                <span class="profile-stat-label">Transactions</span>
+                <span class="profile-stat-value">{{ summary.count }}</span>
+            </div>
+            <div class="profile-stat-card">
+                <span class="profile-stat-label">Top Category</span>
+                <span class="profile-stat-value profile-stat-value--text">
+                    {{ top_category if top_category else "—" }}
+                </span>
+            </div>
+        </div>
+
+        <div class="profile-panels">
+            <div class="profile-panel profile-panel--recent">
+                <h2 class="profile-panel-title">Recent Transactions</h2>
+                {% if recent %}
+                <table class="profile-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th class="profile-table-amount">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for expense in recent %}
+                        <tr>
+                            <td>{{ expense["date"]|nice_date }}</td>
+                            <td>{{ expense["description"] if expense["description"] else "—" }}</td>
+                            <td>
+                                <span class="profile-badge profile-badge--{{ expense['category']|lower }}">
+                                    {{ expense["category"] }}
+                                </span>
+                            </td>
+                            <td class="profile-table-amount">{{ expense["amount"]|rupees }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="profile-empty">No transactions yet.</p>
+                {% endif %}
+            </div>
+
+            <div class="profile-panel profile-panel--category">
+                <h2 class="profile-panel-title">By Category</h2>
+                {% if breakdown %}
+                <ul class="profile-category-list">
+                    {% for row in breakdown %}
+                    <li class="profile-category-item">
+                        <div class="profile-category-head">
+                            <span class="profile-category-name">{{ row["category"] }}</span>
+                            <span class="profile-category-total">{{ row["total"]|rupees }}</span>
+                        </div>
+                        <div class="profile-category-track">
+                            <div class="profile-category-bar profile-category-bar--{{ row['category']|lower }}"
+                                 style="width: {{ (row['total'] / max_category_total * 100) if max_category_total else 0 }}%"></div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="profile-empty">No categories yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</section>
+{% endblock %}
