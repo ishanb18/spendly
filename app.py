@@ -1,10 +1,28 @@
 import re
 import sqlite3
+from datetime import datetime
 
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+from flask import (
+    Flask,
+    abort,
+    flash,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from database.db import get_db, init_db, seed_db
+from database.db import (
+    get_category_breakdown,
+    get_db,
+    get_expense_summary,
+    get_recent_expenses,
+    get_user_by_id,
+    init_db,
+    seed_db,
+)
 
 app = Flask(__name__)
 
@@ -12,6 +30,28 @@ app = Flask(__name__)
 app.secret_key = "dev-secret-change-me"
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+@app.template_filter("rupees")
+def rupees(value):
+    """Format a number as ₹ with comma grouping and 2 decimals."""
+    return "₹{:,.2f}".format(value or 0)
+
+
+@app.template_filter("nice_date")
+def nice_date(value):
+    """Format a YYYY-MM-DD string as '12 Apr 2025'."""
+    if not value:
+        return ""
+    return datetime.strptime(value[:10], "%Y-%m-%d").strftime("%d %b %Y")
+
+
+@app.template_filter("initials")
+def initials(name):
+    """Return up to two uppercase initials from a name ('Demo User' -> 'DU')."""
+    parts = (name or "").split()
+    letters = [p[0] for p in parts[:2]] or [(name or "?")[0]]
+    return "".join(letters).upper()
 
 # Initialize and seed the database before any route can be hit.
 # Module-level so it runs for `python app.py`, `flask run`, and WSGI runners.
@@ -31,9 +71,9 @@ def landing():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    # If user is already logged in, redirect to landing page.
+    # If user is already logged in, redirect to their profile.
     if session.get("user_id"):
-        return redirect(url_for("landing"))
+        return redirect(url_for("profile"))
 
     # GET: render the form, restoring any one-shot prefill from a prior POST.
     if request.method == "GET":
@@ -86,14 +126,14 @@ def register():
     session.clear()  # wipes register_form and any stale session data
     session["user_id"] = user_id
     session["user_name"] = name
-    return redirect(url_for("landing"))
+    return redirect(url_for("profile"))
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    # If user is already logged in, redirect to landing page.
+    # If user is already logged in, redirect to their profile.
     if session.get("user_id"):
-        return redirect(url_for("landing"))
+        return redirect(url_for("profile"))
 
     # GET: render the form, restoring any one‑shot prefill from a prior POST.
     if request.method == "GET":
@@ -137,7 +177,7 @@ def login():
     session.clear()
     session["user_id"] = row["id"]
     session["user_name"] = row["name"]
-    return redirect(url_for("landing"))
+    return redirect(url_for("profile"))
 
 
 @app.route("/terms")
@@ -150,6 +190,37 @@ def privacy():
     return render_template("privacy.html")
 
 
+@app.route("/profile")
+def profile():
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    user = get_user_by_id(session["user_id"])
+    if user is None:
+        # Stale session — the user row no longer exists.
+        session.clear()
+        abort(404)
+
+    summary = get_expense_summary(user["id"])
+    recent = get_recent_expenses(user["id"])
+    breakdown = get_category_breakdown(user["id"])
+    top_category = breakdown[0]["category"] if breakdown else None
+    max_category_total = breakdown[0]["total"] if breakdown else 0
+    member_since = datetime.strptime(
+        user["created_at"][:10], "%Y-%m-%d"
+    ).strftime("%d %b %Y")
+    return render_template(
+        "profile.html",
+        user=user,
+        summary=summary,
+        recent=recent,
+        breakdown=breakdown,
+        top_category=top_category,
+        max_category_total=max_category_total,
+        member_since=member_since,
+    )
+
+
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
@@ -158,11 +229,6 @@ def privacy():
 def logout():
     session.clear()
     return redirect(url_for("landing"))
-
-
-@app.route("/profile")
-def profile():
-    return "Profile page — coming in Step 4"
 
 
 @app.route("/expenses/add")

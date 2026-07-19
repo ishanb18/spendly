@@ -1,0 +1,223 @@
+/* static/css/profile.css — profile page (Step 4) */
+
+.profile-section {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 2.5rem 2rem 4rem;
+}
+
+/* Account card */
+.profile-card {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem 2.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.profile-avatar {
+    width: 72px;
+    height: 72px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent);
+    color: var(--paper-card);
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    letter-spacing: 0.05em;
+    border-radius: 50%;
+}
+
+.profile-name {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 0.15rem;
+}
+
+.profile-email {
+    font-size: 0.95rem;
+    color: var(--ink-muted);
+    margin-bottom: 0.35rem;
+}
+
+.profile-member-since {
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+}
+
+/* Stat cards row */
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.profile-stat-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 1.75rem;
+}
+
+.profile-stat-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.profile-stat-value {
+    font-family: var(--font-display);
+    font-size: 1.9rem;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.profile-stat-value--text {
+    text-transform: capitalize;
+}
+
+/* Two-panel row: recent transactions + category breakdown */
+.profile-panels {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.profile-panel {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem 2rem;
+}
+
+.profile-panel-title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 1.25rem;
+}
+
+/* Recent transactions table */
+.profile-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.profile-table th {
+    text-align: left;
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.profile-table td {
+    padding: 0.9rem 0;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--border-soft);
+    vertical-align: middle;
+}
+
+.profile-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.profile-table-amount {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* Category badges */
+.profile-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    background: var(--paper-warm);
+    color: var(--ink-soft);
+}
+
+.profile-badge--food { background: var(--accent-light); color: var(--accent); }
+.profile-badge--transport { background: var(--accent-2-light); color: var(--accent-2); }
+.profile-badge--health { background: var(--danger-light); color: var(--danger); }
+
+/* Category breakdown bars */
+.profile-category-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+.profile-category-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.4rem;
+}
+
+.profile-category-name {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+}
+
+.profile-category-total {
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.profile-category-track {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--border-soft);
+    overflow: hidden;
+}
+
+.profile-category-bar {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--accent);
+}
+
+.profile-category-bar--shopping { background: var(--accent-2); }
+.profile-category-bar--food { background: var(--accent); }
+.profile-category-bar--health { background: var(--danger); }
+.profile-category-bar--transport { background: var(--accent-2); }
+.profile-category-bar--other { background: var(--ink-faint); }
+
+.profile-empty {
+    font-size: 0.9rem;
+    color: var(--ink-muted);
+    padding: 1rem 0;
+}
+
+@media (max-width: 860px) {
+    .profile-stats { grid-template-columns: 1fr; }
+    .profile-panels { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+    .profile-card { flex-direction: column; text-align: center; }
+}

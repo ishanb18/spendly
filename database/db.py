@@ -96,3 +96,61 @@ def seed_db():
         conn.commit()
     finally:
         conn.close()
+
+
+def get_user_by_id(user_id):
+    """Return the user row (id, name, email, created_at) or None.
+
+    Deliberately excludes password_hash so it can never leak into templates.
+    """
+    conn = get_db()
+    try:
+        return conn.execute(
+            "SELECT id, name, email, created_at FROM users WHERE id = ?",
+            (user_id,),
+        ).fetchone()
+    finally:
+        conn.close()
+
+
+def get_expense_summary(user_id):
+    """Return {"count": int, "total": float} for a user's expenses."""
+    conn = get_db()
+    try:
+        row = conn.execute(
+            "SELECT COUNT(*) AS count, COALESCE(SUM(amount), 0) AS total "
+            "FROM expenses WHERE user_id = ?",
+            (user_id,),
+        ).fetchone()
+        return {"count": row["count"], "total": row["total"]}
+    finally:
+        conn.close()
+
+
+def get_recent_expenses(user_id, limit=5):
+    """Return the user's most recent expenses (newest first)."""
+    conn = get_db()
+    try:
+        return conn.execute(
+            "SELECT id, amount, category, date, description "
+            "FROM expenses WHERE user_id = ? "
+            "ORDER BY date DESC, id DESC LIMIT ?",
+            (user_id, limit),
+        ).fetchall()
+    finally:
+        conn.close()
+
+
+def get_category_breakdown(user_id):
+    """Return [{"category": str, "total": float}, ...], largest total first."""
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT category, SUM(amount) AS total "
+            "FROM expenses WHERE user_id = ? "
+            "GROUP BY category ORDER BY total DESC",
+            (user_id,),
+        ).fetchall()
+        return [{"category": r["category"], "total": r["total"]} for r in rows]
+    finally:
+        conn.close()
